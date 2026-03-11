@@ -121,4 +121,4 @@ The natural extension is real-time deployment: a streaming pipeline that consume
 ## Contact
 
 **Habib Kizamou** | Data Scientist | Niamey, Niger (UTC+1)  
-[LinkedIn](https://linkedin.com/in/habibkizamou) · [Hugging Face](https://huggingface.co/habibkizamou) · habib.kizamou@email.com
+[LinkedIn](https://linkedin.com/in/habibkizamou) · [Hugging Face](https://huggingface.co/habibkizamou) · kizamouhabib@gmail.com
