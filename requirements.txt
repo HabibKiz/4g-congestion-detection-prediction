@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────
+# Core data manipulation
+# ─────────────────────────────────────────────
+pandas>=2.0.0
+numpy>=1.24.0
+
+# ─────────────────────────────────────────────
+# Machine learning — clustering & preprocessing
+# ─────────────────────────────────────────────
+scikit-learn>=1.3.0       # KMeans, GMM, PCA, StandardScaler, metrics
+hdbscan>=0.8.33           # HDBSCAN clustering
+umap-learn>=0.5.5         # UMAP dimensionality reduction (3D projections)
+
+# ─────────────────────────────────────────────
+# Machine learning — forecasting
+# ─────────────────────────────────────────────
+xgboost>=2.0.0            # XGBoost regression + Tweedie objective
+prophet>=1.1.5            # Facebook Prophet time-series forecasting
+lightgbm>=4.0.0           # LightGBM (benchmarked against XGBoost Tweedie)
+
+# ─────────────────────────────────────────────
+# Visualisation
+# ─────────────────────────────────────────────
+matplotlib>=3.7.0
+seaborn>=0.13.0
+
+# ─────────────────────────────────────────────
+# Missing data analysis
+# ─────────────────────────────────────────────
+missingno>=0.5.2          # Correlation of missingness plots
+
+# ─────────────────────────────────────────────
+# Notebook environment
+# ─────────────────────────────────────────────
+jupyter>=1.0.0
+ipykernel>=6.0.0
