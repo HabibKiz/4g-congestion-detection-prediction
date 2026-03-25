@@ -1,70 +1,44 @@
-# Intelligent Network Monitoring: Clustering-Based Detection and Predictive Modelling of Congestion in 4G Networks
+# Intelligent Network Monitoring: Clustering-based Detection and Predictive Modelling of Congestion in 4G Networks
 
-**MSc Thesis Project | Sofrecom (Orange Group) · Rabat, Morocco | 2024–2025**
-
-[![Python](https://img.shields.io/badge/Python-3.10-3776AB?style=flat&logo=python)](https://python.org)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.4-F7931E?style=flat&logo=scikit-learn)](https://scikit-learn.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+**MSc Thesis · University of Middlesex Dubai · 2025**  
+**Author:** Habib Kizamou · Internship at Sofrecom (Orange Group), Rabat
 
 ---
 
-## Problem Statement
+## Overview
 
-4G LTE networks generate continuous streams of performance indicator data — PRB (Physical Resource Block) utilisation, downlink/uplink throughput, packet loss rate, handover success rate, and latency — that collectively describe network health in real time. When these indicators degrade simultaneously in a spatially coherent pattern, the network is experiencing or approaching a congestion event: a condition that directly reduces quality of service for users.
+Telecom networks generate massive streams of KPI data — but turning that data into early warnings operators can actually act on is the real challenge. This project tackles exactly that, using a **hybrid ML pipeline** combining unsupervised clustering and supervised forecasting on live 4G radio access network data from **Orange Mali**.
 
-Traditional approaches rely on static threshold rules configured manually by engineers. These rules are brittle (they cannot adapt to changing traffic patterns) and reactive (they trigger after congestion has already occurred). This project develops a two-stage ML approach: unsupervised detection of congestion-risk states using clustering, followed by predictive forecasting of future congestion probability using supervised learning on historical KPI sequences.
-
-The project was conducted inside a live operator environment at Sofrecom, Orange Group's telecommunications consulting subsidiary, using infrastructure data from Orange Mali's 4G radio access network. It was submitted as the MSc thesis for the programme in Data Science and Artificial Intelligence.
-
----
-
-## Dataset and Context
-
-The dataset consists of KPI time series collected from Orange Mali's 4G base stations over a 14-month window, spanning four temporal aggregation levels: weekly (637,000+ records), daily, hourly, and Busy Hour. KPIs include: PRB utilisation (uplink and downlink), cell throughput (Mbps), packet loss rate (%), average user latency (ms), handover success rate (%), and active user count — 11 dimensions in total.
-
-**Confidentiality note:** Due to operator data agreements with Sofrecom, the raw production dataset cannot be published. This repository includes: (a) a synthetic dataset generated to match the statistical properties of the production data (distribution, seasonality, anomaly rate), documented in `data/synthetic_generation.py`; (b) all model training, evaluation, and visualisation code; and (c) the full methodology as described in the thesis. Researchers wishing to apply this methodology to their own operator data can use the synthetic dataset as a structural template.
+The pipeline moves from raw operational exports to two operational outputs:
+1. **Clustering** — segment network cells by behaviour to surface congestion-risk cohorts
+2. **Forecasting** — predict KPI trajectories 1–7 days ahead to enable proactive intervention
 
 ---
 
-## Methodology
+## Results at a Glance
 
-### Stage 1: Congestion State Detection (Unsupervised Clustering)
-
-KPI vectors were constructed for each base station at each time interval by normalising and concatenating the 11 indicator dimensions. Three clustering algorithms were evaluated: HDBSCAN, K-Means, and GMM. Cluster quality was assessed using silhouette score and Davies-Bouldin index. The resulting clusters were interpreted by domain labelling into operational congestion-risk states.
-
-**Key finding:** HDBSCAN achieved silhouette scores of 0.69–0.70 on datasets exceeding one million observations, outperforming K-Means (0.24–0.29) by a factor of approximately 2.4×. HDBSCAN's density-based approach handled the irregular, non-spherical cluster shapes in network KPI space significantly better than centroid-based methods, and its noise-point identification surfaced genuinely anomalous cells that K-Means would have forced into the nearest cluster. The resulting cell-risk groupings were validated with Sofrecom's network operations engineers as operationally interpretable.
-
-### Stage 2: Congestion Prediction (Supervised Time-Series Forecasting)
-
-Using congestion-state indicators derived from Stage 1, supervised forecasting models were trained on sliding windows of KPI history to predict congestion probability at 1–7 day horizons. Models evaluated: XGBoost (gradient boosting), Prophet (additive decomposition), and polynomial regression baseline.
-
-**Key finding:** XGBoost delivered 30–60% lower MAE than Prophet on short-horizon forecasting tasks (1–7 days). Prophet's additive decomposition structure was less suited to the non-stationary, operationally-driven patterns in network KPI data compared to XGBoost's ability to capture non-linear feature interactions. Active Users was identified as the most reliable leading indicator for congestion events — the recommended production architecture uses HDBSCAN segmentation with targeted XGBoost forecasting on Active Users per congestion-risk cell cohort.
-
-**Synthetic dataset extension:** A synthetic Busy Hour dataset was generated using XGBoost Tweedie to extend temporal coverage from 1 to 6 months under Huawei PRS data retention constraints, enabling richer model training while preserving validation integrity across the 14-month operational window.
+| Task | Best Model | Key Metric |
+|------|-----------|------------|
+| Cell segmentation (11 KPIs, 1M+ obs) | HDBSCAN | Silhouette: **0.69–0.70** |
+| Short-term forecasting (1–7 day) | XGBoost | **30–60% lower MAE** vs Prophet |
+| Synthetic Busy Hour generation | XGBoost Tweedie | 1 month → **6 months** coverage |
 
 ---
 
-## Results Summary
+## Dataset
 
-| Model | Task | Key Metric | Result |
-|---|---|---|---|
-| HDBSCAN | Cell segmentation | Silhouette score | 0.69–0.70 |
-| K-Means | Cell segmentation | Silhouette score | 0.24–0.29 |
-| GMM | Cell segmentation | Silhouette score | [your result] |
-| XGBoost | 1–7 day forecasting | MAE vs Prophet | 30–60% lower |
-| Prophet | 1–7 day forecasting | Baseline | — |
+Data was extracted from **Orange Mali's 4G Radio Access Network** via Sofrecom's PRS interface — live operational KPI exports across four temporal granularities:
 
----
+| Granularity | Rows |
+|------------|------|
+| Weekly | ~637K+ (combined) |
+| Daily | |
+| Hourly | |
+| Busy Hour (BH) | |
 
-## Limitations
+**11 KPIs tracked:** accessibility, retainability, mobility, traffic volume, throughput, and user experience metrics.
 
-This study has three principal limitations. First, the models were trained on data from a single network deployment in one geographic market; generalisation to other operators or countries would require retraining on local data. Second, the supervised stage depends on the quality of the clustering-derived labels; errors in Stage 1 propagate into Stage 2 performance. Third, the synthetic dataset, while statistically representative, cannot fully replicate the spatial correlation structure of real network data (adjacent base stations exhibit correlated KPI behaviour that the synthetic generator approximates but does not fully model).
-
----
-
-## Next Steps and Extensions
-
-The natural extension is real-time deployment: a streaming pipeline that consumes live KPI data from an operator's network management system, applies the trained models, and generates alerts or automated configuration changes via network API. A secondary extension of direct relevance to Sub-Saharan African deployments is adaptation of the clustering methodology to 4G networks in low-density rural markets, where traffic patterns and congestion drivers differ substantially from the urban deployment studied here.
+> ⚠️ **Note:** Raw data is proprietary to Orange Group / Sofrecom and is not included in this repository. Notebooks use anonymised or synthetic data where applicable.
 
 ---
 
@@ -73,52 +47,79 @@ The natural extension is real-time deployment: a streaming pipeline that consume
 ```
 4g-congestion-detection-prediction/
 │
-├── README.md
-├── LICENSE
-├── requirements.txt
-├── .gitignore
-│
-├── data/
-│   ├── raw/                        # Original data — gitignored
-│   ├── processed/                  # Cleaned, feature-engineered data
-│   └── synthetic_generation.py     # Script to reproduce synthetic dataset
-│
 ├── notebooks/
-│   ├── 01_exploratory_analysis.ipynb
-│   ├── 02_clustering_experiments.ipynb
-│   ├── 03_predictive_model_training.ipynb
-│   └── 04_results_visualisation.ipynb
+│   ├── 01_data_preparation/       # Cleaning, standardisation, synthetic BH creation
+│   ├── 02_eda/                    # Univariate, bivariate, correlation analysis
+│   ├── 03_clustering/             # HDBSCAN, K-Means, GMM across granularities
+│   └── 04_forecasting/            # Prophet, XGBoost, polynomial regression benchmarks
 │
-├── src/
-│   ├── __init__.py
-│   ├── data_processing.py
-│   ├── clustering.py
-│   ├── prediction.py
-│   └── evaluation.py
+├── report/
+│   └── Habib_Kizamou_Thesis.pdf   # Full dissertation report
 │
-├── models/trained/
-├── reports/figures/
-└── tests/
-    └── test_data_processing.py
+├── presentation/
+│   └── Thesis_Presentation.pptx   # Defence slides
+│
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## Cite This Work
+## Methodology
 
-```
-@mastersthesis{kizamou2025,
-  title={Intelligent Network Monitoring: Clustering-Based Detection and Predictive Modelling of Congestion in 4G Networks},
-  author={Kizamou, Habib},
-  school={[Your University]},
-  year={2025},
-  note={Conducted in collaboration with Sofrecom, Orange Group}
-}
-```
+### 1. Data Preparation
+- Standardised 637,000+ rows of live KPI exports across 4 temporal aggregations
+- Handled missing data, outliers, and unit inconsistencies
+- Generated a **synthetic Busy Hour dataset** using XGBoost Tweedie regression to extend temporal coverage from 1 to 6 months under data retention constraints
+
+### 2. Clustering
+Applied three algorithms across all four temporal granularities:
+- **HDBSCAN** — density-based, no fixed cluster count required → best performer (silhouette 0.69–0.70)
+- **K-Means** — baseline (silhouette 0.24–0.29)
+- **GMM** — probabilistic soft assignments
+- **Domain-informed clustering** — engineered features using Orange's Black Point / Grey Point operational thresholds
+
+### 3. Forecasting
+Benchmarked three model families for 1–7 day ahead prediction:
+- **XGBoost** — gradient boosting with lag features and temporal encodings → best performer
+- **Prophet** — Facebook's additive model for seasonality decomposition
+- **Polynomial Regression** — baseline
 
 ---
 
-## Contact
+## Tech Stack
 
-**Habib Kizamou** | Data Scientist | Niamey, Niger (UTC+1)  
-[LinkedIn](https://linkedin.com/in/habibkizamou) · [Hugging Face](https://huggingface.co/habibkizamou) · kizamouhabib@gmail.com
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=flat&logo=jupyter&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat&logo=scikitlearn&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-189ABB?style=flat)
+![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white)
+
+**Libraries:** pandas · NumPy · scikit-learn · XGBoost · Prophet · HDBSCAN · UMAP · matplotlib · seaborn
+
+---
+
+## Key Findings
+
+- **HDBSCAN is the right tool for this data** — it surfaces meaningful congestion-risk cohorts without requiring a pre-specified cluster count, and is robust to the noise inherent in live network exports
+- **XGBoost decisively outperforms Prophet** on 1–7 day horizons (30–60% lower MAE), making short-term congestion early warning operationally feasible
+- **Synthetic data generation works** — the Tweedie XGBoost synthetic BH dataset closely mirrors real distribution statistics, enabling richer model training where retention policies limit historical depth
+- A **production architecture** recommendation was delivered to Sofrecom engineering as part of this work
+
+---
+
+## Report & Presentation
+
+- 📄 [Full Thesis Report](report/Habib_Kizamou_Thesis.pdf)
+- 📊 [Presentation Slides](presentation/Thesis_Presentation.pptx)
+
+---
+
+## Author
+
+**Habib Kizamou**  
+MSc Data Science & AI · University of Middlesex Dubai  
+Data Scientist Intern · Sofrecom (Orange Group), Rabat · Jun–Nov 2025
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/habib-kizamou/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/HabibKiz)
